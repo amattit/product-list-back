@@ -11,6 +11,7 @@ struct CreateProduct: Migration {
     func prepare(on database: Database) -> EventLoopFuture<Void> {
         return database.schema("Product")
             .id()
+            .field("title", .string, .required)
             .field("createdAt", .datetime, .required)
             .field("updatedAt", .datetime)
             .field("deletedAt", .datetime)

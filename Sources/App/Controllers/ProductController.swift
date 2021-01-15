@@ -9,7 +9,7 @@ import Vapor
 import Fluent
 
 
-struct ProdutController: RouteCollection {
+struct ProductController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         let api = routes.grouped("api")
         let v1 = api.grouped("v1")
@@ -29,7 +29,7 @@ struct ProdutController: RouteCollection {
         
         return ProductList.find(UUID(uuidString: listId), on: req.db).flatMap {
             if let list = $0 {
-                guard list.$user.id == user.id else {
+                guard list.userId == user.id else {
                     return req.eventLoop.future(error: Abort(.badRequest))
                 }
                 return list.$products.query(on: req.db).all().flatMapThrowing { product in
@@ -58,7 +58,7 @@ struct ProdutController: RouteCollection {
         product.$productList.id = UUID(uuidString: listId)!
         
         return ProductList.find(UUID(uuidString: listId), on: req.db).flatMapThrowing {
-            guard let list = $0, list.$user.id == user.id else {
+            guard let list = $0, list.userId == user.id else {
                 throw Abort(.badRequest)
             }
             _ = product.save(on: req.db)

@@ -26,7 +26,7 @@ struct CreateTokens: Migration {
     func prepare(on database: Database) -> EventLoopFuture<Void> {
         database.schema(Token.schema)
             .id()
-            .field("userId", .uuid, .required, .references("User", "id"))
+            .field("userId", .uuid, .required)
             .field("value", .string, .required)
             .unique(on: "value")
             .field("createdAt", .datetime, .required)

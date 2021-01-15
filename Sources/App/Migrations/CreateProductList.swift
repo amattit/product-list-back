@@ -15,7 +15,7 @@ struct CreateProductList: Migration {
             .field("updatedAt", .datetime)
             .field("deletedAt", .datetime)
             .field("title", .string, .required)
-            .field("userId", .uuid, .required, .references("User", "id"))
+            .field("userId", .uuid, .required)
             .create()
     }
     

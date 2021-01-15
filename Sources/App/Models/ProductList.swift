@@ -26,8 +26,11 @@ final class ProductList: BaseEntity, Model {
     @Field(key: "title")
     var title: String
     
-    @Parent(key: "userId")
-    var user: User
+    @Field(key: "userId")
+    var userId: UUID
+    
+    @Siblings(through: UserProductList.self, from: \.$productList, to: \.$user)
+    var user: [User]
     
     @Children(for: \.$productList)
     var products: [Product]

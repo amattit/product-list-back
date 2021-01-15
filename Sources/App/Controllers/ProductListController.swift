@@ -25,24 +25,44 @@ struct ProdutListController: RouteCollection {
         let dto = try req.content.decode(DTO.UpsertListRq.self)
         let item  = ProductList()
         item.title = dto.title
-        item.$user.id = try user.requireID()
+        item.userId = try user.requireID()
         return item.save(on: req.db).flatMapThrowing {
-            DTO.ListRs(id: try item.requireID(), title: item.title, count: 0)
+            _ = item.$user.attach(user, on: req.db)
+            return DTO.ListRs(id: try item.requireID(), title: item.title, count: 0)
         }
     }
     
     func delete(req: Request) throws -> EventLoopFuture<HTTPStatus> {
         let user = try req.auth.require(User.self)
-        guard let productListId = req.parameters.get("id") else {
+        guard let productListId = UUID(uuidString: req.parameters.get("id") ?? "") else {
             return req.eventLoop.future(error: Abort(.badRequest))
         }
-        return ProductList.find(UUID(uuidString: productListId), on: req.db).flatMap {
-            guard let list = $0, list.$user.id == user.id else {
+        return ProductList.find(productListId, on: req.db).flatMap {
+            guard let list = $0 else {
                 return req.eventLoop.future(error: Abort(.badRequest))
             }
-            return list.delete(on: req.db).map {
-                HTTPStatus.ok
+            
+            if list.userId != user.id {
+                return list.$user.isAttached(to: user, on: req.db).flatMap { isAttached in
+                    if isAttached {
+                        return list.delete(on: req.db).map {
+                            HTTPStatus.ok
+                        }
+                    } else {
+                        return req.eventLoop.future(error: Abort(.badRequest))
+                    }
+                }
+            } else {
+                return UserProductList.query(on: req.db)
+                    .filter(\.$user.$id == user.id!)
+                    .filter(\.$productList.$id == productListId).all()
+                    .flatMap {
+                        _ = list.delete(on: req.db)
+                        return $0.map { $0.delete(on: req.db)}.flatten(on: req.eventLoop).transform(to: HTTPStatus.ok)
+                    }
             }
+            // MARK: Fix me Если удаляет владелец, то удалить все связи и удалить запись. Иначего удалить только связь
+            
         }
     }
     
@@ -54,7 +74,7 @@ struct ProdutListController: RouteCollection {
         }
         
         return ProductList.find(UUID(uuidString: listId), on: req.db).flatMap {
-            guard let list = $0, list.$user.id == user.id else {
+            guard let list = $0, list.userId == user.id else {
                 return req.eventLoop.future(error: Abort(.badRequest))
             }
             list.title = dto.title
