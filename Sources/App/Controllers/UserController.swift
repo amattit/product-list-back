@@ -10,7 +10,7 @@ import Fluent
 
 struct UserController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
-        let userRoute = routes.grouped("/api/v1")
+        let userRoute = routes.grouped("api", "v1")
         userRoute.post("registration", use: auth)
     }
     
