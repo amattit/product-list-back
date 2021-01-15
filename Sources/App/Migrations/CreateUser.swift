@@ -23,18 +23,18 @@ struct CreateUser: Migration {
 }
 
 struct CreateTokens: Migration {
-  func prepare(on database: Database) -> EventLoopFuture<Void> {
-    database.schema(Token.schema)
-      .field("id", .uuid, .identifier(auto: true))
-      .field("userId", .uuid, .references("User", "id"))
-      .field("value", .string, .required)
-      .unique(on: "value")
-      .field("createdAt", .datetime, .required)
-      .field("expiresAt", .datetime)
-      .create()
-  }
-
-  func revert(on database: Database) -> EventLoopFuture<Void> {
-    database.schema(Token.schema).delete()
-  }
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Token.schema)
+            .id()
+            .field("userId", .uuid, .required, .references("User", "id"))
+            .field("value", .string, .required)
+            .unique(on: "value")
+            .field("createdAt", .datetime, .required)
+            .field("expiresAt", .datetime)
+            .create()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Token.schema).delete()
+    }
 }

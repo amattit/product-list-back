@@ -10,11 +10,21 @@ import Fluent
 
 struct UserController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
-        let userRoute = routes.grouped("api", "v1")
-        userRoute.post("registration", use: auth)
+        let api = routes.grouped("api")
+        let v1 = api.grouped("v1")
+        
+        v1.post("registration", use: auth)
+        
+        let tokenProtected = v1.grouped(Token.authenticator())
+        tokenProtected.get("me", use: test)
     }
     
-    fileprivate func auth(req: Request) throws -> EventLoopFuture<DTO.AuthRs> {
+    private func test(req: Request) throws -> EventLoopFuture<User> {
+        let user = try req.auth.require(User.self)
+        return req.eventLoop.future(user)
+    }
+    
+    private func auth(req: Request) throws -> EventLoopFuture<DTO.AuthRs> {
         let device = try req.content.decode(DTO.AuthRq.self)
         let user = User()
         var token: Token!
@@ -23,13 +33,13 @@ struct UserController: RouteCollection {
             .flatMap {
                 if $0 == nil {
                     return user.save(on: req.db).flatMap {
-                        // MARK: FixMe
-                        token = try! user.createToken()
+                        token = User.createToken(fo: user.id!)
+                        let _ = Device(id: nil, os: device.os, uid: device.uid, token: device.pushToken, userId: try! user.requireID())
+                            .save(on: req.db)
                         return token.save(on: req.db)
                     }
                 } else {
-                    // MARK: FixMe
-                    token = try! $0?.user.createToken()
+                    token = User.createToken(fo: ($0?.$user.id)!)
                     return token.save(on: req.db)
                 }
             }.flatMapThrowing {

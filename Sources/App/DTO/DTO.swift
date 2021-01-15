@@ -19,8 +19,8 @@ struct DTO {
         let count: Int
     }
     
-    struct CreateProductRq: Decodable {
-        let title: String
+    struct CreateProductRq: Content {
+        let title: String?
         let count: Double?
         let measureUnit: String?
     }

@@ -29,4 +29,7 @@ final class ProductList: BaseEntity, Model {
     @Parent(key: "userId")
     var user: User
     
+    @Children(for: \.$productList)
+    var products: [Product]
+    
 }

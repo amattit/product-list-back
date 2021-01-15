@@ -30,10 +30,12 @@ public func configure(_ app: Application) throws {
 //    app.migrations.add(CreateTodo())
     app.migrations.add(CreateUser())
     app.migrations.add(CreateDevice())
-    app.migrations.add(CreateProduct())
     app.migrations.add(CreateProductList())
+    app.migrations.add(CreateProduct())
     app.migrations.add(CreateTokens())
 
+    try app.autoMigrate().wait()
+    
     app.views.use(.leaf)
 
     

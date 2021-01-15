@@ -38,5 +38,20 @@ final class Product: BaseEntity, Model {
     @Parent(key: "userId")
     var user: User
     
+    @Parent(key: "productListId")
+    var productList: ProductList
+    
+    init() {}
+    
+    init(id: UUID? = nil, title: String, count: Double?, mu: String?, isDone: Bool, userId: UUID, productListId: UUID) {
+        self.id = id
+        self.title = title
+        self.count = count
+        self.measureUnit = mu
+        self.isDone = isDone
+        self.$user.id = userId
+        self.$productList.id = productListId
+    }
+    
 }
 
