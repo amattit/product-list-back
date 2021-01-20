@@ -34,30 +34,28 @@ struct AdminController: RouteCollection {
             throw Abort(.badRequest)
         }
         
-        _ = ProductSuggest.query(on: req.db).all().map { self.delete($0, req: req) }
-        
         var rows = rawData.split(separator: "\r\n")
         rows.remove(at: 0)
         
-        for item in rows {
-            let properties = item.split(separator: ";")
-            let category = String(properties[0])
-            let title = String(properties[1])
-            let price = Double(Int(properties[2]) ?? 0)
-            let imagePath = String(properties[3])
-            _ = ProductSuggest(id: nil, category: category, price: price, title: title, imagePath: imagePath).save(on: req.db)
+        return ProductSuggest.query(on: req.db).all().map { self.delete($0, req: req) }.flatMap {
+            for item in rows {
+                let properties = item.split(separator: ";")
+                let category = String(properties[0])
+                let title = String(properties[1])
+                let price = Double(Int(properties[2]) ?? 0)
+                let imagePath = String(properties[3])
+                _ = ProductSuggest(id: nil, category: category, price: price, title: title, imagePath: imagePath).save(on: req.db)
+            }
+            
+            let string = ProductSuggest.query(on: req.db).all().map {
+                return $0.map {
+                    $0.title + "\n"
+                }.joined()
+            }
+            
+            return string
+
         }
-        
-        
-        
-        
-        let string = ProductSuggest.query(on: req.db).all().map {
-            return $0.map {
-                $0.title + "\n"
-            }.joined()
-        }
-        
-        return string
     }
     
     func search(req: Request) throws -> EventLoopFuture<[ProductSuggest]> {
