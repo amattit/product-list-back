@@ -27,7 +27,7 @@ struct ProductController: RouteCollection {
             return req.eventLoop.future(error: Abort(.badRequest))
         }
         
-        return ProductList.find(UUID(uuidString: listId), on: req.db).flatMap {
+        return ProductList.find(listId, on: req.db).flatMap {
             if let list = $0 {
                 guard list.userId == user.id else {
                     return req.eventLoop.future(error: Abort(.badRequest))
@@ -46,7 +46,7 @@ struct ProductController: RouteCollection {
     func create(req: Request) throws -> EventLoopFuture<DTO.ProductRs> {
         let user = try req.auth.require(User.self)
         let dto = try req.content.decode(DTO.CreateProductRq.self)
-        guard let listId = req.parameters.get("id") else {
+        guard let id = req.parameters.get("id"), let listId = UUID(uuidString: id) else {
             return req.eventLoop.future(error: Abort(.badRequest))
         }
         let product = Product()
@@ -55,9 +55,9 @@ struct ProductController: RouteCollection {
         product.measureUnit = dto.measureUnit
         product.isDone = false
         product.$user.id = try user.requireID()
-        product.$productList.id = UUID(uuidString: listId)!
+        product.$productList.id = listId
         
-        return ProductList.find(UUID(uuidString: listId), on: req.db).flatMapThrowing {
+        return ProductList.find(listId, on: req.db).flatMapThrowing {
             guard let list = $0, list.userId == user.id else {
                 throw Abort(.badRequest)
             }
@@ -69,7 +69,7 @@ struct ProductController: RouteCollection {
     func patch(req: Request) throws -> EventLoopFuture<DTO.ProductRs> {
         let user = try req.auth.require(User.self)
         let dto = try req.content.decode(DTO.CreateProductRq.self)
-        guard let productId = UUID(uuidString: req.parameters.get("id") ?? "") else {
+        guard let id = req.parameters.get("id"), let productId = UUID(uuidString: id) else {
             return req.eventLoop.future(error: Abort(.badRequest))
         }
         
@@ -96,7 +96,7 @@ struct ProductController: RouteCollection {
     
     func delete(req: Request) throws -> EventLoopFuture<HTTPStatus> {
         let user = try req.auth.require(User.self)
-        guard let productId = UUID(uuidString: req.parameters.get("id") ?? "") else {
+        guard let id = req.parameters.get("id"), let productId = UUID(uuidString: id) else {
             return req.eventLoop.future(error: Abort(.badRequest))
         }
         
@@ -113,7 +113,7 @@ struct ProductController: RouteCollection {
     
     func setDone(req: Request) throws -> EventLoopFuture<DTO.ProductRs> {
         let user = try req.auth.require(User.self)
-        guard let productId = UUID(uuidString: req.parameters.get("id") ?? "") else {
+        guard let id = req.parameters.get("id"), let productId = UUID(uuidString: id) else {
             return req.eventLoop.future(error: Abort(.badRequest))
         }
         
@@ -129,7 +129,7 @@ struct ProductController: RouteCollection {
     
     func setUnDone(req: Request) throws -> EventLoopFuture<DTO.ProductRs> {
         let user = try req.auth.require(User.self)
-        guard let productId = UUID(uuidString: req.parameters.get("id") ?? "") else {
+        guard let id = req.parameters.get("id"), let productId = UUID(uuidString: id) else {
             return req.eventLoop.future(error: Abort(.badRequest))
         }
         
