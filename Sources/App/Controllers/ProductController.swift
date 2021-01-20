@@ -23,7 +23,7 @@ struct ProductController: RouteCollection {
     
     func get(req: Request) throws -> EventLoopFuture<[DTO.ProductRs]> {
         let user = try req.auth.require(User.self)
-        guard let listId = req.parameters.get("id") else {
+        guard let id = req.parameters.get("id"), let listId = UUID(uuidString: id) else {
             return req.eventLoop.future(error: Abort(.badRequest))
         }
         

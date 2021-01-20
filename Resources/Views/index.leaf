@@ -1,12 +1,13 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-
-  <title>#(title)</title>
-</head>
-
+<!DOCTYPE html>
+<html>
 <body>
-  <h1>#(title)</h1>
+
+<p>Click on the "Choose File" button to upload a file:</p>
+
+<form action="/upload" method="post" enctype="multipart/form-data">
+  <input type="file" id="myFile" name="filename">
+  <input type="submit">
+</form>
+
 </body>
 </html>

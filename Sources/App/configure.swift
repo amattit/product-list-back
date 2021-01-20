@@ -34,6 +34,7 @@ public func configure(_ app: Application) throws {
     app.migrations.add(CreateProduct())
     app.migrations.add(CreateTokens())
     app.migrations.add(CreateUserProductList())
+    app.migrations.add(CreateProductSuggest())
 
     try app.autoMigrate().wait()
     
