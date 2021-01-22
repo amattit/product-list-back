@@ -42,4 +42,10 @@ struct DTO {
     struct AuthRs: Content {
         let token: String
     }
+    
+    struct UpdatePushTokenRq: Content {
+        let uid: String
+        let pushToken: String?
+        let os: String
+    }
 }

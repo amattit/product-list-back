@@ -26,6 +26,9 @@ final class User: BaseEntity, Model, Authenticatable, Content {
     @Siblings(through: UserProductList.self, from: \.$user, to: \.$productList)
     var productList: [ProductList]
     
+    @Children(for: \.$user)
+    var device: [Device]
+    
     init() {}
     
     init(id: UUID? = nil) {

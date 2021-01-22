@@ -17,6 +17,26 @@ struct UserController: RouteCollection {
         
         let tokenProtected = v1.grouped(Token.authenticator())
         tokenProtected.get("me", use: test)
+        tokenProtected.put("token", use: updatePushToken)
+    }
+    
+    private func updatePushToken(req: Request) throws -> EventLoopFuture<HTTPStatus> {
+        let user = try req.auth.require(User.self)
+        let content = try req.content.decode(DTO.UpdatePushTokenRq.self)
+        
+        return user.$device.get(on: req.db).flatMap { devices in
+            if let device = devices
+                .filter({
+                    $0.os == content.os
+                        && $0.uid == content.uid
+                }).first {
+                device.pushToken = content.pushToken
+                _ = device.save(on: req.db)
+                return req.eventLoop.future(HTTPStatus.ok)
+            } else {
+                return req.eventLoop.future(HTTPStatus.custom(code: 403, reasonPhrase: "Device not found"))
+            }
+        }
     }
     
     private func test(req: Request) throws -> EventLoopFuture<User> {
