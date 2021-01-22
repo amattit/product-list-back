@@ -23,7 +23,6 @@ final class User: BaseEntity, Model, Authenticatable, Content {
     @Timestamp(key: "deletedAt", on: .delete)
     var deletedAt: Date?
     
-//    @Children(for: \.$user)
     @Siblings(through: UserProductList.self, from: \.$user, to: \.$productList)
     var productList: [ProductList]
     

@@ -16,7 +16,7 @@ struct DTO {
     struct ListRs: Content {
         let id: UUID
         let title: String
-        let count: Int
+        let count: String
     }
     
     struct CreateProductRq: Content {

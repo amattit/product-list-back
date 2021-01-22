@@ -15,10 +15,12 @@ struct ProductController: RouteCollection {
         let v1 = api.grouped("v1")
         
         let tokenProtected = v1.grouped(Token.authenticator())
-        tokenProtected.get("list", ":id", use: get)
-        tokenProtected.post("list", ":id", use: create)
+        tokenProtected.get("list", ":id", "product", use: get)
+        tokenProtected.post("list", ":id", "product", use: create)
         tokenProtected.patch("product", ":id", use: patch)
         tokenProtected.delete("product", ":id" , use: delete)
+        tokenProtected.put("product", ":id", "done", use: setDone)
+        tokenProtected.put("product", ":id", "un-done", use: setUnDone)
     }
     
     func get(req: Request) throws -> EventLoopFuture<[DTO.ProductRs]> {
@@ -117,13 +119,23 @@ struct ProductController: RouteCollection {
             return req.eventLoop.future(error: Abort(.badRequest))
         }
         
+        // MARK: FIXME участники списка продуктов могут отмечать продукты купленными
         return Product.find(productId, on: req.db).flatMap { product in
-            guard let product = product, product.$user.id == user.id else {
+            
+            guard let product = product else {
                 return req.eventLoop.future(error: Abort(.badRequest))
             }
-            product.isDone = true
-            _ = product.save(on: req.db)
-            return req.eventLoop.future(DTO.ProductRs(id: productId, title: product.title, count: product.count, measureUnit: product.measureUnit, isDone: product.isDone))
+            return product.$productList.get(on: req.db).map { productList in
+                productList.$user.get(on: req.db).map { users -> EventLoopFuture<DTO.ProductRs> in
+                    guard product.$user.id == user.id || users.contains(where: {$0.id == user.id}) else {
+                        return req.eventLoop.future(error: Abort(.forbidden))
+                    }
+                    product.isDone = true
+                    _ = product.save(on: req.db)
+                    return req.eventLoop.future(DTO.ProductRs(id: productId, title: product.title, count: product.count, measureUnit: product.measureUnit, isDone: product.isDone))
+                }
+                .flatMap { $0 }
+            }.flatMap { $0 }
         }
     }
     
@@ -133,13 +145,23 @@ struct ProductController: RouteCollection {
             return req.eventLoop.future(error: Abort(.badRequest))
         }
         
+        // MARK: FIXME участники списка продуктов могут отмечать продукты купленными
         return Product.find(productId, on: req.db).flatMap { product in
-            guard let product = product, product.$user.id == user.id else {
+            
+            guard let product = product else {
                 return req.eventLoop.future(error: Abort(.badRequest))
             }
-            product.isDone = false
-            _ = product.save(on: req.db)
-            return req.eventLoop.future(DTO.ProductRs(id: productId, title: product.title, count: product.count, measureUnit: product.measureUnit, isDone: product.isDone))
+            return product.$productList.get(on: req.db).map { productList in
+                productList.$user.get(on: req.db).map { users -> EventLoopFuture<DTO.ProductRs> in
+                    guard product.$user.id == user.id || users.contains(where: {$0.id == user.id}) else {
+                        return req.eventLoop.future(error: Abort(.forbidden))
+                    }
+                    product.isDone = false
+                    _ = product.save(on: req.db)
+                    return req.eventLoop.future(DTO.ProductRs(id: productId, title: product.title, count: product.count, measureUnit: product.measureUnit, isDone: product.isDone))
+                }
+                .flatMap { $0 }
+            }.flatMap { $0 }
         }
     }
 }
