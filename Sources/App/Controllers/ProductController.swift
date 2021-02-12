@@ -31,14 +31,17 @@ struct ProductController: RouteCollection {
         
         return ProductList.find(listId, on: req.db).flatMap {
             if let list = $0 {
-                guard list.userId == user.id else {
-                    return req.eventLoop.future(error: Abort(.badRequest))
-                }
-                return list.$products.query(on: req.db).all().flatMapThrowing { product in
-                    return try product.map { product in
-                        DTO.ProductRs(id: try product.requireID(), title: product.title, count: product.count, measureUnit: product.measureUnit, isDone: product.isDone)
+                return list.$user.isAttached(to: user, on: req.db).flatMap {
+                    guard list.userId == user.id || $0 else {
+                        return req.eventLoop.future(error: Abort(.badRequest))
+                    }
+                    return list.$products.query(on: req.db).all().flatMapThrowing { product in
+                        return try product.map { product in
+                            DTO.ProductRs(id: try product.requireID(), title: product.title, count: product.count, measureUnit: product.measureUnit, isDone: product.isDone)
+                        }
                     }
                 }
+                
             } else {
                 return req.eventLoop.future(error: Abort(.badRequest))
             }

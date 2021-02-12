@@ -93,7 +93,6 @@ struct ProdutListController: RouteCollection {
     
     func get(req: Request) throws -> EventLoopFuture<[DTO.ListRs]> {
         let user = try req.auth.require(User.self)
-        
         return user.$productList.query(on: req.db).all().flatMap {
             return $0.map { list in
                 list.$products.query(on: req.db).count().flatMap { total in

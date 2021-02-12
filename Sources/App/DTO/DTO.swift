@@ -48,4 +48,15 @@ struct DTO {
         let pushToken: String?
         let os: String
     }
+    
+    struct Profile: Content {
+        let id: UUID
+        let devices: [Device]
+    }
+    
+    struct Device: Content {
+        let uid: String
+        let pushToken: String?
+        let os: String
+    }
 }

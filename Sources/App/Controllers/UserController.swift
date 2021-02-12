@@ -39,9 +39,13 @@ struct UserController: RouteCollection {
         }
     }
     
-    private func test(req: Request) throws -> EventLoopFuture<User> {
+    private func test(req: Request) throws -> EventLoopFuture<DTO.Profile> {
         let user = try req.auth.require(User.self)
-        return req.eventLoop.future(user)
+        return user.$device.get(on: req.db).flatMapThrowing { devices in
+            DTO.Profile(id: try user.requireID(), devices: devices.map {
+                DTO.Device(uid: $0.uid, pushToken: $0.pushToken, os: $0.os )
+            })
+        }
     }
     
     private func auth(req: Request) throws -> EventLoopFuture<DTO.AuthRs> {
