@@ -27,10 +27,7 @@ final class Product: BaseEntity, Model {
     var title: String
     
     @Field(key: "count")
-    var count: Double?
-    
-    @Field(key: "measureUnit")
-    var measureUnit: String?
+    var count: String?
     
     @Field(key: "isDone")
     var isDone: Bool
@@ -43,11 +40,10 @@ final class Product: BaseEntity, Model {
     
     init() {}
     
-    init(id: UUID? = nil, title: String, count: Double?, mu: String?, isDone: Bool, userId: UUID, productListId: UUID) {
+    init(id: UUID? = nil, title: String, count: String?, isDone: Bool, userId: UUID, productListId: UUID) {
         self.id = id
         self.title = title
         self.count = count
-        self.measureUnit = mu
         self.isDone = isDone
         self.$user.id = userId
         self.$productList.id = productListId

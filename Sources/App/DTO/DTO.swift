@@ -21,15 +21,14 @@ struct DTO {
     
     struct CreateProductRq: Content {
         let title: String?
-        let count: Double?
+        let count: String?
         let measureUnit: String?
     }
     
     struct ProductRs: Content {
         let id: UUID
         let title: String
-        let count: Double?
-        let measureUnit: String?
+        let count: String?
         let isDone: Bool
     }
     

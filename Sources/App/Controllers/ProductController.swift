@@ -37,7 +37,7 @@ struct ProductController: RouteCollection {
                     }
                     return list.$products.query(on: req.db).all().flatMapThrowing { product in
                         return try product.map { product in
-                            DTO.ProductRs(id: try product.requireID(), title: product.title, count: product.count, measureUnit: product.measureUnit, isDone: product.isDone)
+                            DTO.ProductRs(id: try product.requireID(), title: product.title, count: product.count, isDone: product.isDone)
                         }
                     }
                 }
@@ -57,7 +57,6 @@ struct ProductController: RouteCollection {
         let product = Product()
         product.title = dto.title ?? ""
         product.count = dto.count
-        product.measureUnit = dto.measureUnit
         product.isDone = false
         product.$user.id = try user.requireID()
         product.$productList.id = listId
@@ -67,7 +66,7 @@ struct ProductController: RouteCollection {
                 throw Abort(.badRequest)
             }
             _ = product.save(on: req.db)
-            return  DTO.ProductRs(id: try product.requireID(), title: product.title, count: product.count, measureUnit: product.measureUnit, isDone: product.isDone)
+            return  DTO.ProductRs(id: try product.requireID(), title: product.title, count: product.count, isDone: product.isDone)
         }
     }
     
@@ -90,12 +89,8 @@ struct ProductController: RouteCollection {
                 product.count = count
             }
             
-            if let mu = dto.measureUnit {
-                product.measureUnit = mu
-            }
-            
             _ = product.save(on: req.db)
-            return DTO.ProductRs(id: try product.requireID(), title: product.title, count: product.count, measureUnit: product.measureUnit, isDone: product.isDone)
+            return DTO.ProductRs(id: try product.requireID(), title: product.title, count: product.count, isDone: product.isDone)
         }
     }
     
@@ -135,7 +130,7 @@ struct ProductController: RouteCollection {
                     }
                     product.isDone = true
                     _ = product.save(on: req.db)
-                    return req.eventLoop.future(DTO.ProductRs(id: productId, title: product.title, count: product.count, measureUnit: product.measureUnit, isDone: product.isDone))
+                    return req.eventLoop.future(DTO.ProductRs(id: productId, title: product.title, count: product.count, isDone: product.isDone))
                 }
                 .flatMap { $0 }
             }.flatMap { $0 }
@@ -161,7 +156,7 @@ struct ProductController: RouteCollection {
                     }
                     product.isDone = false
                     _ = product.save(on: req.db)
-                    return req.eventLoop.future(DTO.ProductRs(id: productId, title: product.title, count: product.count, measureUnit: product.measureUnit, isDone: product.isDone))
+                    return req.eventLoop.future(DTO.ProductRs(id: productId, title: product.title, count: product.count, isDone: product.isDone))
                 }
                 .flatMap { $0 }
             }.flatMap { $0 }
