@@ -13,7 +13,7 @@ final class Product: BaseEntity, Model {
     
     @ID(key: .id)
     var id: UUID?
-    
+     
     @Timestamp(key: "createdAt", on: .create)
     var createdAt: Date?
     
