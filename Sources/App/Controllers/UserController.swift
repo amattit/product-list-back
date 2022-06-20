@@ -20,6 +20,7 @@ struct UserController: RouteCollection {
         tokenProtected.put("token", use: updatePushToken)
     }
     
+    /// Обновить токен для пуша
     private func updatePushToken(req: Request) throws -> EventLoopFuture<HTTPStatus> {
         let user = try req.auth.require(User.self)
         let content = try req.content.decode(DTO.UpdatePushTokenRq.self)
@@ -39,6 +40,7 @@ struct UserController: RouteCollection {
         }
     }
     
+    /// Вернуть свой профиль
     private func test(req: Request) throws -> EventLoopFuture<DTO.Profile> {
         let user = try req.auth.require(User.self)
         return user.$device.get(on: req.db).flatMapThrowing { devices in
@@ -48,6 +50,7 @@ struct UserController: RouteCollection {
         }
     }
     
+    /// Регистрация или авторизация
     private func auth(req: Request) throws -> EventLoopFuture<DTO.AuthRs> {
         let device = try req.content.decode(DTO.AuthRq.self)
         let user = User()

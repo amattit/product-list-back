@@ -95,10 +95,10 @@ struct ProdutListController: RouteCollection {
         let user = try req.auth.require(User.self)
         return user.$productList.query(on: req.db).all().flatMap {
             return $0.map { list in
-                list.$products.query(on: req.db).count().flatMap { total in
-                    list.$products.query(on: req.db).filter(\.$isDone == true).count().flatMapThrowing { done in
-                        DTO.ListRs(id: try list.requireID(), title: list.title, count: "\(done)/\(total)")
-                    }
+                list.$products.query(on: req.db).filter(\.$isDone == false).all().flatMapThrowing { items in
+//                    list.$products.query(on: req.db).filter(\.$isDone == true).count().flatMapThrowing { done in
+                    DTO.ListRs(id: try list.requireID(), title: list.title, count: items.map {$0.title}.joined(separator: ", "))
+//                    }
                 }
             }.flatten(on: req.eventLoop)
         }
