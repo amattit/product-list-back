@@ -9,7 +9,8 @@ public func configure(_ app: Application) throws {
      app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
 
     if let databaseURL = Environment.get("DATABASE_URL"), var postgresConfig = PostgresConfiguration(url: databaseURL) {
-        postgresConfig.tlsConfiguration = .forClient(certificateVerification: .none)
+//        postgresConfig.tlsConfiguration = .forClient(certificateVerification: .none)
+        postgresConfig.tlsConfiguration = .makeClientConfiguration()
         app.databases.use(.postgres(
             configuration: postgresConfig
         ), as: .psql)
@@ -32,6 +33,7 @@ public func configure(_ app: Application) throws {
     app.migrations.add(CreateUserProductList())
     app.migrations.add(CreateProductSuggest())
     app.migrations.add(CreateShareTokens())
+    app.migrations.add(AddUsername())
 
     try app.autoMigrate().wait()
     

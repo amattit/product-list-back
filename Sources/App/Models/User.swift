@@ -29,6 +29,9 @@ final class User: BaseEntity, Model, Authenticatable, Content {
     @Children(for: \.$user)
     var device: [Device]
     
+    @Field(key: "username")
+    var username: String
+    
     init() {}
     
     init(id: UUID? = nil) {

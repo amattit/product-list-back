@@ -22,3 +22,15 @@ struct CreateUser: Migration {
     }
 }
 
+struct AddUsername: Migration {
+    
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        return database.schema("User")
+            .field("username", .string)
+            .update()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        return database.schema("User").delete()
+    }
+}
