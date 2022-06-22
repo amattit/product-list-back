@@ -62,7 +62,7 @@ struct ProductController: RouteCollection {
         product.$productList.id = listId
         
         return ProductList.find(listId, on: req.db).flatMapThrowing {
-            guard let list = $0, list.userId == user.id else {
+            guard let list = $0 else {
                 throw Abort(.badRequest)
             }
             _ = product.save(on: req.db)
