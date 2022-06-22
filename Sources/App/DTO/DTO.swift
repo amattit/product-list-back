@@ -51,6 +51,11 @@ struct DTO {
     struct Profile: Content {
         let id: UUID
         let devices: [Device]
+        let username: String?
+    }
+    
+    struct SetUsernameRq: Content {
+        let username: String
     }
     
     struct Device: Content {

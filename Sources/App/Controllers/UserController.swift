@@ -18,6 +18,7 @@ struct UserController: RouteCollection {
         let tokenProtected = v1.grouped(Token.authenticator())
         tokenProtected.get("me", use: test)
         tokenProtected.put("token", use: updatePushToken)
+        tokenProtected.post("me", use: setUsername)
     }
     
     /// Обновить токен для пуша
@@ -41,13 +42,24 @@ struct UserController: RouteCollection {
     }
     
     /// Вернуть свой профиль
-    private func test(req: Request) throws -> EventLoopFuture<DTO.Profile> {
+    private func test(req: Request) async throws -> DTO.Profile {
         let user = try req.auth.require(User.self)
-        return user.$device.get(on: req.db).flatMapThrowing { devices in
-            DTO.Profile(id: try user.requireID(), devices: devices.map {
-                DTO.Device(uid: $0.uid, pushToken: $0.pushToken, os: $0.os )
-            })
-        }
+        
+        let devices = try await user.$device
+            .get(on: req.db)
+            .get()
+            .map {
+                DTO.Device(
+                    uid: $0.uid,
+                    pushToken: $0.pushToken,
+                    os: $0.os)
+            }
+        
+        return DTO.Profile(
+            id: try user.requireID(),
+            devices: devices,
+            username: user.username
+        )
     }
     
     /// Регистрация или авторизация
@@ -72,6 +84,25 @@ struct UserController: RouteCollection {
             }.flatMapThrowing {
                 DTO.AuthRs(token: token.value)
             }
+    }
+    
+    private func setUsername(req: Request) async throws -> DTO.Profile {
+        let user = try req.auth.require(User.self)
+        let content = try req.content.decode(DTO.SetUsernameRq.self)
+        
+        user.username = content.username
+        try await user.save(on: req.db).get()
+        let devices = try await user.$device
+            .get(on: req.db)
+            .get()
+            .map {
+                DTO.Device(
+                    uid: $0.uid,
+                    pushToken: $0.pushToken,
+                    os: $0.os)
+            }
+        
+        return DTO.Profile(id: try user.requireID(), devices: devices, username: user.username)
     }
     
     private func checkIfUserExists(

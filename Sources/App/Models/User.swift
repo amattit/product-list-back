@@ -30,7 +30,7 @@ final class User: BaseEntity, Model, Authenticatable, Content {
     var device: [Device]
     
     @Field(key: "username")
-    var username: String
+    var username: String?
     
     init() {}
     
