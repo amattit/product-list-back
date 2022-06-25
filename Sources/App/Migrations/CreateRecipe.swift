@@ -35,6 +35,7 @@ struct CreateRecipeCategory: Migration {
             .field("deletedAt", .datetime)
             .field("title", .string, .required)
             .field("imagePath", .string)
+            .field("order", .int)
             .create()
     }
     

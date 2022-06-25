@@ -81,6 +81,7 @@ extension RecipeController {
         for category in categories {
             let count = try await RecipeCategory.query(on: req.db)
                 .filter(\.$id == category.requireID())
+                .sort(\.$order, .ascending)
                 .count()
                 
             response.append(

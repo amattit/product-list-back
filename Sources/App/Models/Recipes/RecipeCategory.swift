@@ -29,6 +29,9 @@ final class RecipeCategory: BaseEntity, Model {
     @Field(key: "imagePath")
     var imagePath: String?
     
+    @Field(key: "order")
+    var order: Int?
+    
     @Siblings(through: RecipeCategoryRecipe.self, from: \.$category, to: \.$recipe)
     var recipes: [Recipe]
     
