@@ -33,12 +33,15 @@ public func configure(_ app: Application) throws {
     app.migrations.add(CreateProductSuggest())
     app.migrations.add(CreateShareTokens())
     app.migrations.add(AddUsername())
+    
+    app.migrations.add(CreateRecipe())
+    app.migrations.add(CreateRecipeCategory())
+    app.migrations.add(CreateRecipeProduct())
+    app.migrations.add(CreateRecipeCategoryRecipe())
 
     try app.autoMigrate().wait()
     
     app.views.use(.leaf)
-
-    
 
     // register routes
     try routes(app)

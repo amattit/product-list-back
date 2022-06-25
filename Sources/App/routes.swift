@@ -33,4 +33,5 @@ func routes(_ app: Application) throws {
     try app.register(collection: ProdutListController())
     try app.register(collection: ProductController())
     try app.register(collection: AdminController())
+    try app.register(collection: RecipeController())
 }
