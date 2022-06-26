@@ -41,7 +41,7 @@ extension RecipeController {
     /// В теле передается список продуктов для добавления в список
     func sendRecipeToList(req: Request) async throws -> HTTPStatus {
         let user = try req.auth.require(User.self)
-        guard let listId = req.parameters.get("listId"), let uid = UUID(uuidString: listId) else {
+        guard let listId = req.parameters.get("productListId"), let uid = UUID(uuidString: listId) else {
             throw Abort(.badRequest, reason: "Переданный id списка продуктов не валидный")
         }
         

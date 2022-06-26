@@ -16,7 +16,7 @@ import Vapor
 /// 4. Получить все рецепты в категории **[GET]/api/v1/recipe/category/:id**
 ///
 /// Требуется авторизация
-/// 5. Добавить продукты к списку покупок **[POST]/api/v1/recipe/:recipeId**
+/// 5. Добавить продукты к списку покупок **[POST]/api/v1/list/:listId/recipe**
 struct RecipeController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         let api = routes.grouped("api")
@@ -35,7 +35,7 @@ struct RecipeController: RouteCollection {
         category.post(use: createCategory)
         category.post(":categoryId", use: createRecipe)
         
-        let list = tokenProtected.grouped("list", ":listId", "recipe")
-        list.post(use: sendRecipeToList)
+        let list = tokenProtected.grouped("add", "list")
+        list.post(":productListId", "recipe", use: sendRecipeToList)
     }
 }
