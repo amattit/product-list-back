@@ -51,3 +51,12 @@ final class Product: BaseEntity, Model {
     
 }
 
+extension Product: Hashable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(title)
+    }
+    
+    static func == (lhs: Product, rhs: Product) -> Bool {
+        lhs.title == rhs.title
+    }
+}
