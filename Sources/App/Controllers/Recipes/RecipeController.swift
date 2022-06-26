@@ -34,5 +34,8 @@ struct RecipeController: RouteCollection {
         
         category.post(use: createCategory)
         category.post(":categoryId", use: createRecipe)
+        
+        let list = tokenProtected.grouped("list", ":listId", "recipe")
+        list.post(use: sendRecipeToList)
     }
 }
