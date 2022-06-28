@@ -3,6 +3,7 @@ import FluentPostgresDriver
 import Leaf
 import Vapor
 import APNS
+import APNSwift
 
 // configures your application
 public func configure(_ app: Application) throws {
@@ -34,7 +35,7 @@ public func configure(_ app: Application) throws {
         app.apns.configuration = try .init(
             authenticationMethod: .jwt(
                 key: .private(pem: Data(appleECP8PrivateKey.utf8)),
-                keyIdentifier: "AuthKey_Y7N549U556",
+                keyIdentifier: "Y7N549U556",
                 teamIdentifier: "8FR82B7BH7"
             ),
             topic: "mikhailseregin.product-list",
