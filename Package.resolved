@@ -128,6 +128,15 @@
         }
       },
       {
+        "package": "queues",
+        "repositoryURL": "https://github.com/vapor/queues.git",
+        "state": {
+          "branch": null,
+          "revision": "58b2d785118d164b38c59beb595cbffbea7608ef",
+          "version": "1.8.1"
+        }
+      },
+      {
         "package": "routing-kit",
         "repositoryURL": "https://github.com/vapor/routing-kit.git",
         "state": {
@@ -260,6 +269,15 @@
           "branch": null,
           "revision": "12e2e7460ab912b65fb7a0fe47e4f638a7d5e642",
           "version": "4.62.0"
+        }
+      },
+      {
+        "package": "QueuesFluentDriver",
+        "repositoryURL": "https://github.com/m-barthelemy/vapor-queues-fluent-driver.git",
+        "state": {
+          "branch": null,
+          "revision": "f623ad13ada3e01d416f5fc520d72ef4c3a8c632",
+          "version": "1.2.0"
         }
       },
       {

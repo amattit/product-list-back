@@ -161,49 +161,18 @@ struct ProductController: RouteCollection {
         product.isDone = true
         try await product.save(on: req.db)
         
-        // переделать на job
-        let usersToPush = try users.filter {
-            try $0.requireID() != user.requireID()
-        }
-        
-        for user in usersToPush {
-            let deviceTokens = try await user.$device.get(on: req.db).compactMap(\.pushToken)
-            for token in deviceTokens {
-                try await req.apns.send(
-                    .init(title: "Купил", subtitle: product.title),
-                    to: token
-                ).get()
-            }
-        }
+        try await req.queue.dispatch(
+            NotificationJob.self,
+            NotificationMessage(
+                title: "Купил",
+                subtitle: product.title,
+                producId: productId,
+                userId: user.requireID()
+            )
+        )
         
         return DTO.ProductRs(id: productId, title: product.title, count: product.count, isDone: product.isDone)
     }
-    
-//    func setDone(req: Request) throws -> EventLoopFuture<DTO.ProductRs> {
-//        let user = try req.auth.require(User.self)
-//        guard let id = req.parameters.get("id"), let productId = UUID(uuidString: id) else {
-//            return req.eventLoop.future(error: Abort(.badRequest))
-//        }
-//        
-//        // MARK: FIXME участники списка продуктов могут отмечать продукты купленными
-//        return Product.find(productId, on: req.db).flatMap { product in
-//            
-//            guard let product = product else {
-//                return req.eventLoop.future(error: Abort(.badRequest))
-//            }
-//            return product.$productList.get(on: req.db).map { productList in
-//                productList.$user.get(on: req.db).map { users -> EventLoopFuture<DTO.ProductRs> in
-//                    guard product.$user.id == user.id || users.contains(where: {$0.id == user.id}) else {
-//                        return req.eventLoop.future(error: Abort(.forbidden))
-//                    }
-//                    product.isDone = true
-//                    _ = product.save(on: req.db)
-//                    return req.eventLoop.future(DTO.ProductRs(id: productId, title: product.title, count: product.count, isDone: product.isDone))
-//                }
-//                .flatMap { $0 }
-//            }.flatMap { $0 }
-//        }
-//    }
     
     func setUnDone(req: Request) throws -> EventLoopFuture<DTO.ProductRs> {
         let user = try req.auth.require(User.self)

@@ -4,6 +4,8 @@ import Leaf
 import Vapor
 import APNS
 import APNSwift
+import Queues
+import QueuesFluentDriver
 
 // configures your application
 public func configure(_ app: Application) throws {
@@ -32,15 +34,17 @@ public func configure(_ app: Application) throws {
     \(key)
     -----END PRIVATE KEY-----
     """
-        app.apns.configuration = try .init(
-            authenticationMethod: .jwt(
-                key: .private(pem: Data(appleECP8PrivateKey.utf8)),
-                keyIdentifier: "Y7N549U556",
-                teamIdentifier: "8FR82B7BH7"
-            ),
-            topic: "mikhailseregin.product-list",
-            environment: .production
-        )
+        if let data = appleECP8PrivateKey.data(using: .utf8) {
+            app.apns.configuration = try .init(
+                authenticationMethod: .jwt(
+                    key: .private(pem: data),
+                    keyIdentifier: "Y7N549U556",
+                    teamIdentifier: "8FR82B7BH7"
+                ),
+                topic: "mikhailseregin.product-list",
+                environment: .production
+            )
+        }
     }
 
 //    app.migrations.add(CreateTodo())
@@ -58,10 +62,15 @@ public func configure(_ app: Application) throws {
     app.migrations.add(CreateRecipeCategory())
     app.migrations.add(CreateRecipeProduct())
     app.migrations.add(CreateRecipeCategoryRecipe())
+    app.migrations.add(JobModelMigrate())
 
     try app.autoMigrate().wait()
     
     app.views.use(.leaf)
+    
+    app.queues.use(.fluent())
+    app.queues.add(NotificationJob())
+    try app.queues.startInProcessJobs(on: .default)
 
     // register routes
     try routes(app)
