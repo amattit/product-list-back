@@ -162,8 +162,8 @@ struct ProductController: RouteCollection {
         try await product.save(on: req.db)
         
         // переделать на job
-        let usersToPush = try users.filter { user in
-            try user.requireID() != user.requireID()
+        let usersToPush = try users.filter {
+            try $0.requireID() != user.requireID()
         }
         
         for user in usersToPush {
