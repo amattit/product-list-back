@@ -2,6 +2,7 @@ import Fluent
 import FluentPostgresDriver
 import Leaf
 import Vapor
+import APNS
 
 // configures your application
 public func configure(_ app: Application) throws {
@@ -21,6 +22,24 @@ public func configure(_ app: Application) throws {
             password: Environment.get("DATABASE_PASSWORD") ?? "vapor_password",
             database: Environment.get("DATABASE_NAME") ?? "vapor_database"
         ), as: .psql)
+    }
+    
+    if let key = Environment.get("PUSH_KEY") {
+        let appleECP8PrivateKey =
+    """
+    -----BEGIN PRIVATE KEY-----
+    \(key)
+    -----END PRIVATE KEY-----
+    """
+        app.apns.configuration = try .init(
+            authenticationMethod: .jwt(
+                key: .private(pem: Data(appleECP8PrivateKey.utf8)),
+                keyIdentifier: "AuthKey_Y7N549U556",
+                teamIdentifier: "8FR82B7BH7"
+            ),
+            topic: "mikhailseregin.product-list",
+            environment: .production
+        )
     }
 
 //    app.migrations.add(CreateTodo())
