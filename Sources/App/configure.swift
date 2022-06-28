@@ -70,6 +70,8 @@ public func configure(_ app: Application) throws {
     
     app.queues.use(.fluent())
     app.queues.add(NotificationJob())
+    app.queues.add(AuthTokenRemoveJob())
+    
     try app.queues.startInProcessJobs(on: .default)
 
     // register routes
