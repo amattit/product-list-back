@@ -74,30 +74,18 @@ struct ProductController: RouteCollection {
         
         try await product.save(on: req.db).get()
         
+        try await req.queue.dispatch(
+            NotificationJob.self,
+            NotificationMessage(
+                title: "Купи",
+                subtitle: product.title,
+                producId: productId,
+                userId: user.requireID()
+            )
+        )
+        
         return DTO.ProductRs(id: try product.requireID(), title: product.title, count: product.count, isDone: product.isDone)
     }
-    
-//    func create(req: Request) throws -> EventLoopFuture<DTO.ProductRs> {
-//        let user = try req.auth.require(User.self)
-//        let dto = try req.content.decode(DTO.CreateProductRq.self)
-//        guard let id = req.parameters.get("id"), let listId = UUID(uuidString: id) else {
-//            return req.eventLoop.future(error: Abort(.badRequest))
-//        }
-//        let product = Product()
-//        product.title = dto.title ?? ""
-//        product.count = dto.count
-//        product.isDone = false
-//        product.$user.id = try user.requireID()
-//        product.$productList.id = listId
-//
-//        return ProductList.find(listId, on: req.db).flatMapThrowing {
-//            guard let list = $0 else {
-//                throw Abort(.badRequest)
-//            }
-//            _ = product.save(on: req.db)
-//            return  DTO.ProductRs(id: try product.requireID(), title: product.title, count: product.count, isDone: product.isDone)
-//        }
-//    }
     
     func patch(req: Request) throws -> EventLoopFuture<DTO.ProductRs> {
         let user = try req.auth.require(User.self)
