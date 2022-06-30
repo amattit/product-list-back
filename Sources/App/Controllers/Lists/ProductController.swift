@@ -79,7 +79,7 @@ struct ProductController: RouteCollection {
             NotificationMessage(
                 title: "Купи",
                 subtitle: product.title,
-                producId: productId,
+                producId: product.requireID(),
                 userId: user.requireID()
             )
         )
