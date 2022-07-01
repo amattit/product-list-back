@@ -76,8 +76,8 @@ struct UserController: RouteCollection {
         } else {
             // создать пользователя
             let user = User()
-            let token = try User.createToken(fo: user.requireID())
             try await user.save(on: req.db)
+            let token = try User.createToken(fo: user.requireID())
             let device = Device(id: nil, os: device.os, uid: device.uid, token: device.pushToken, userId: try user.requireID())
             try await device.save(on: req.db)
             try await token.save(on: req.db)
