@@ -91,18 +91,38 @@ struct ProdutListController: RouteCollection {
         }
     }
     
-    func get(req: Request) throws -> EventLoopFuture<[DTO.ListRs]> {
+    func get(req: Request) async throws -> [DTO.ListRs] {
         let user = try req.auth.require(User.self)
-        return user.$productList.query(on: req.db).all().flatMap {
-            return $0.map { list in
-                list.$products.query(on: req.db).filter(\.$isDone == false).all().flatMapThrowing { items in
-//                    list.$products.query(on: req.db).filter(\.$isDone == true).count().flatMapThrowing { done in
-                    DTO.ListRs(id: try list.requireID(), title: list.title, count: items.map {$0.title}.joined(separator: ", "))
-//                    }
-                }
-            }.flatten(on: req.eventLoop)
+        let lists = try await user.$productList.query(on: req.db).all()
+        var response = [DTO.ListRs]()
+        for list in lists {
+            let products = try await list.$products.query(on: req.db).filter(\.$isDone == false).all()
+            let isShared = try await list.$user.query(on: req.db).count() > 1
+            response.append(
+                DTO.ListRs(
+                    id: try list.requireID(),
+                    title: list.title,
+                    count: products.map {$0.title}.joined(separator: ", "),
+                    isOwn: try user.requireID() == list.userId ? true : false,
+                    isShared: isShared
+                )
+            )
         }
+        return response
     }
+    
+//    func get(req: Request) throws -> EventLoopFuture<[DTO.ListRs]> {
+//        let user = try req.auth.require(User.self)
+//        return user.$productList.query(on: req.db).all().flatMap {
+//            return $0.map { list in
+//                list.$products.query(on: req.db).filter(\.$isDone == false).all().flatMapThrowing { items in
+////                    list.$products.query(on: req.db).filter(\.$isDone == true).count().flatMapThrowing { done in
+//                    DTO.ListRs(id: try list.requireID(), title: list.title, count: items.map {$0.title}.joined(separator: ", "))
+////                    }
+//                }
+//            }.flatten(on: req.eventLoop)
+//        }
+//    }
     
     /// GET
     /// /api/v1/list/:id/share-token

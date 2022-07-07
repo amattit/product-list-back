@@ -17,6 +17,8 @@ struct DTO {
         let id: UUID
         let title: String
         let count: String
+        var isOwn: Bool?
+        var isShared: Bool?
     }
     
     struct CreateProductRq: Content {
