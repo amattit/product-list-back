@@ -96,33 +96,26 @@ struct ProdutListController: RouteCollection {
         let lists = try await user.$productList.query(on: req.db).with(\.$products).with(\.$user).all()
         var response = [DTO.ListRs]()
         for list in lists {
-//            let products = try await list.$products.query(on: req.db).filter(\.$isDone == false).all()
-//            let isShared = try await list.$user.query(on: req.db).count() > 1
+            let owner = list.user.first { u in
+                u.id == list.userId
+            }
             response.append(
                 DTO.ListRs(
                     id: try list.requireID(),
                     title: list.title,
                     count: list.products.map {$0.title}.joined(separator: ", "),
                     isOwn: try user.requireID() == list.userId ? true : false,
-                    isShared: list.user.count > 1
+                    isShared: list.user.count > 1,
+                    profile: DTO.Profile(
+                        id: try owner!.requireID(),
+                        devices: [],
+                        username: owner?.username
+                    )
                 )
             )
         }
         return response
     }
-    
-//    func get(req: Request) throws -> EventLoopFuture<[DTO.ListRs]> {
-//        let user = try req.auth.require(User.self)
-//        return user.$productList.query(on: req.db).all().flatMap {
-//            return $0.map { list in
-//                list.$products.query(on: req.db).filter(\.$isDone == false).all().flatMapThrowing { items in
-////                    list.$products.query(on: req.db).filter(\.$isDone == true).count().flatMapThrowing { done in
-//                    DTO.ListRs(id: try list.requireID(), title: list.title, count: items.map {$0.title}.joined(separator: ", "))
-////                    }
-//                }
-//            }.flatten(on: req.eventLoop)
-//        }
-//    }
     
     /// GET
     /// /api/v1/list/:id/share-token

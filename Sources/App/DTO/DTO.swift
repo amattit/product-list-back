@@ -19,6 +19,7 @@ struct DTO {
         let count: String
         var isOwn: Bool?
         var isShared: Bool?
+        var profile: Profile?
     }
     
     struct CreateProductRq: Content {

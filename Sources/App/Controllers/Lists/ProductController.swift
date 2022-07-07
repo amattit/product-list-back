@@ -68,8 +68,7 @@ struct ProductController: RouteCollection {
         product.$productList.id = listId
         
         guard let list = try await ProductList
-            .find(listId, on: req.db)
-            .get() else {
+            .find(listId, on: req.db) else {
             throw Abort(.badRequest, reason: "Product list not found")
         }
         
