@@ -17,35 +17,40 @@ struct ProductController: RouteCollection {
         let tokenProtected = v1.grouped(Token.authenticator())
         tokenProtected.get("list", ":id", "product", use: get)
         tokenProtected.post("list", ":id", "product", use: create)
+        tokenProtected.post("list", ":id", "products", use: massCreate)
         tokenProtected.patch("product", ":id", use: patch)
         tokenProtected.delete("product", ":id" , use: delete)
         tokenProtected.put("product", ":id", "done", use: setDone)
         tokenProtected.put("product", ":id", "un-done", use: setUnDone)
     }
     
-    func get(req: Request) throws -> EventLoopFuture<[DTO.ProductRs]> {
+    func get(req: Request) async throws -> [DTO.ProductRs] {
         let user = try req.auth.require(User.self)
         guard let id = req.parameters.get("id"), let listId = UUID(uuidString: id) else {
-            return req.eventLoop.future(error: Abort(.badRequest))
+            throw Abort(.badRequest)
         }
         
-        return ProductList.find(listId, on: req.db).flatMap {
-            if let list = $0 {
-                return list.$user.isAttached(to: user, on: req.db).flatMap {
-                    guard list.userId == user.id || $0 else {
-                        return req.eventLoop.future(error: Abort(.badRequest))
-                    }
-                    return list.$products.query(on: req.db).all().flatMapThrowing { product in
-                        return try product.map { product in
-                            DTO.ProductRs(id: try product.requireID(), title: product.title, count: product.count, isDone: product.isDone)
-                        }
-                    }
-                }
-                
-            } else {
-                return req.eventLoop.future(error: Abort(.badRequest))
-            }
+        guard let productList = try await ProductList.find(listId, on: req.db) else {
+            throw Abort(.notFound, reason: "Список с id \(id) не найден")
         }
+        
+        let isUserAttached = try await productList.$user.isAttached(to: user, on: req.db)
+        
+        guard isUserAttached else {
+            throw Abort(.forbidden, reason: "У вас нету прав на чтение списка покупок")
+        }
+        
+        return try await productList.$products
+            .query(on: req.db)
+            .all()
+            .map { product in
+                DTO.ProductRs(
+                    id: try product.requireID(),
+                    title: product.title,
+                    count: product.count,
+                    isDone: product.isDone
+                )
+            }
     }
     
     func create(req: Request) async throws -> DTO.ProductRs {
@@ -85,6 +90,52 @@ struct ProductController: RouteCollection {
         )
         
         return DTO.ProductRs(id: try product.requireID(), title: product.title, count: product.count, isDone: product.isDone)
+    }
+    
+    func massCreate(req: Request) async throws -> [DTO.ProductRs] {
+        let user = try req.auth.require(User.self)
+        let dtos = try req.content.decode([DTO.CreateProductRq].self)
+        guard let id = req.parameters.get("id"), let listId = UUID(uuidString: id) else {
+            throw Abort(.badRequest, reason: "bad listId")
+        }
+        
+        let products = try dtos.map { dto -> Product in
+            let product = Product()
+            product.title = dto.title ?? ""
+            product.count = dto.count
+            product.isDone = false
+            product.$user.id = try user.requireID()
+            product.$productList.id = listId
+            return product
+        }
+        
+        guard let list = try await ProductList
+            .find(listId, on: req.db)
+            .get() else {
+            throw Abort(.badRequest, reason: "Product list not found")
+        }
+        
+        guard try await list.$user.isAttached(to: user, on: req.db).get() else {
+            throw Abort(.badRequest, reason: "User has no permissions to add product in this product list")
+        }
+        
+        try await products.create(on: req.db)
+        
+        if let productId = try? products.first?.requireID() {
+            try await req.queue.dispatch(
+                NotificationJob.self,
+                NotificationMessage(
+                    title: "Купи",
+                    subtitle: products.map(\.title).joined(separator: " "),
+                    producId: productId,
+                    userId: user.requireID()
+                )
+            )
+        }
+        
+        return try products.map { product -> DTO.ProductRs in
+            DTO.ProductRs(id: try product.requireID(), title: product.title, count: product.count, isDone: product.isDone)
+        }
     }
     
     func patch(req: Request) throws -> EventLoopFuture<DTO.ProductRs> {
