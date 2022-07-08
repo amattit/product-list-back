@@ -35,4 +35,7 @@ final class ProductList: BaseEntity, Model {
     @Children(for: \.$productList)
     var products: [Product]
     
+    @Children(for: \.$productList)
+    var shareToken: [ShareToken]
+    
 }

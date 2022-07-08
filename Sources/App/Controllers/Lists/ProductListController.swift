@@ -21,6 +21,7 @@ struct ProdutListController: RouteCollection {
         
         tokenProtected.get("list", ":id", "share-token", use: createShareToken)
         tokenProtected.get("list", "token", ":id", use: applyShareToken)
+        tokenProtected.post("list", ":id", "settings", use: settings)
     }
     
     func create(req: Request) throws -> EventLoopFuture<DTO.ListRs> {
@@ -159,6 +160,33 @@ struct ProdutListController: RouteCollection {
             _ = list.$user.attach(user, on: req.db)
             return DTO.ListRs(id: try list.requireID(), title: list.title, count: "0/0")
         }
+    }
+    
+    func settings(req: Request) async throws -> DTO.Settings {
+        let _ = try req.auth.require(User.self)
+        guard let id = req.parameters.get("id"), let listId = UUID(uuidString: id) else {
+            throw Abort(.badRequest, reason: "Некорректный id списка продуктов")
+        }
+        
+        guard let list = try await ProductList
+            .query(on: req.db)
+            .filter(\.$id == listId)
+            .with(\.$user)
+            .with(\.$shareToken)
+            .first() else {
+            throw Abort(.notFound, reason: "Запрашиваемый список не найден")
+        }
+        let users = try list.user.map {
+            DTO.Profile(id: try $0.requireID(), devices: [], username: $0.username)
+        }
+        return DTO.Settings(shareToken: list.shareToken.map(\.token), users: users)
+    }
+}
+
+extension DTO {
+    struct Settings: Content {
+        let shareToken: [String]?
+        let users: [Profile]
     }
 }
 
