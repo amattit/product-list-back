@@ -16,12 +16,14 @@ struct ProdutListController: RouteCollection {
         let tokenProtected = v1.grouped(Token.authenticator())
         tokenProtected.post("list", use: create)
         tokenProtected.delete("list", ":id", use: delete)
+        tokenProtected.delete("list", ":id", "user", ":userId", use: deleteUser)
         tokenProtected.put("list", ":id", use: update)
         tokenProtected.get("list", use: get)
         
         tokenProtected.get("list", ":id", "share-token", use: createShareToken)
+        tokenProtected.delete("list", ":id", "share-token", use: deleteShareToken)
         tokenProtected.get("list", "token", ":id", use: applyShareToken)
-        tokenProtected.post("list", ":id", "settings", use: settings)
+        tokenProtected.get("list", ":id", "settings", use: settings)
     }
     
     func create(req: Request) throws -> EventLoopFuture<DTO.ListRs> {
@@ -68,6 +70,31 @@ struct ProdutListController: RouteCollection {
             // MARK: Fix me Если удаляет владелец, то удалить все связи и удалить запись. Иначего удалить только связь
             
         }
+    }
+    
+    func deleteUser(req: Request) async throws -> HTTPStatus {
+        let _ = try req.auth.require(User.self)
+        guard let productListId = UUID(uuidString: req.parameters.get("id") ?? "") else {
+            throw Abort(.badRequest, reason: "Некорректный идентификатор списка продуктов")
+        }
+        
+        guard let userId = req.parameters.get("userId"), let userUid = UUID(userId) else {
+            throw Abort(.badRequest, reason: "Некорректный идентификатор пользователя")
+        }
+        
+        guard let productList = try await ProductList.query(on: req.db)
+            .filter(\.$id == productListId)
+            .with(\.$user)
+            .first() else {
+            throw Abort(.notFound, reason: "Список продуктов не найден")
+        }
+        
+        if productList.userId != userUid, let user = try productList.user.first(where: { try $0.requireID() == userUid
+        }) {
+            try await productList.$user.detach(user, on: req.db)
+            return .ok
+        }
+        return .badRequest
     }
     
     func update(req: Request) throws -> EventLoopFuture<DTO.ListRs> {
@@ -180,6 +207,24 @@ struct ProdutListController: RouteCollection {
             DTO.Profile(id: try $0.requireID(), devices: [], username: $0.username)
         }
         return DTO.Settings(shareToken: list.shareToken.map(\.token), users: users)
+    }
+    
+    /// DELETE
+    /// /api/v1/list/:id/share-token
+    func deleteShareToken(req: Request) async throws -> HTTPStatus {
+        let user = try req.auth.require(User.self)
+        guard let id = req.parameters.get("id"), let listId = UUID(uuidString: id) else {
+            throw Abort(.badRequest)
+        }
+        guard let list = try await ProductList.query(on: req.db).filter(\.$id == listId).with(\.$shareToken).first() else {
+            throw Abort(.notFound, reason: "Список покупок не найден")
+        }
+        
+        guard try list.userId == user.requireID() else {
+            throw Abort(.badRequest, reason: "Вы не имеете права удалять ссылку")
+        }
+        try await list.shareToken.delete(on: req.db)
+        return .ok
     }
 }
 
