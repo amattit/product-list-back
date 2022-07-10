@@ -61,7 +61,9 @@ struct AdminController: RouteCollection {
     func search(req: Request) async throws -> [ProductSuggest] {
         let query = try req.query.decode(SearchRq.self)
         return try await ProductSuggest.query(on: req.db)
-            .filter(\ProductSuggest.$title, .custom("ilike"), "%\(query.title)%")
+            .group(.or) { group in
+                group.filter(\ProductSuggest.$title, .custom("ilike"), "%\(query.title)%").filter(\ProductSuggest.$category, .custom("ilike"), "%\(query.title)%")
+            }
             .all()
     }
     
