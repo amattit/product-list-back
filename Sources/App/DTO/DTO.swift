@@ -146,3 +146,12 @@ extension DTO {
         let count: String?
     }
 }
+
+extension DTO {
+    struct CreateSuggestRq: Content {
+        let category: String
+        let color: String
+        /// список продуктов через запятую
+        let products: String
+    }
+}

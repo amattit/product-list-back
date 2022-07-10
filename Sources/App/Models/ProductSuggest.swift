@@ -35,13 +35,17 @@ final class ProductSuggest: BaseEntity, Model, Content {
     @Field(key: "imagePath")
     var imagePath: String
     
+    @Field(key: "color")
+    var color: String
+    
     init() {}
     
-    init(id: UUID? = nil, category: String, price: Double, title: String, imagePath: String) {
+    init(id: UUID? = nil, category: String, price: Double, title: String, imagePath: String, color: String = "") {
         self.id = id
         self.title = title
         self.price = price
         self.category = category
         self.imagePath = imagePath
+        self.color = color
     }
 }

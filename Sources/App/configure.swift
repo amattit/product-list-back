@@ -63,6 +63,7 @@ public func configure(_ app: Application) throws {
     app.migrations.add(CreateRecipeProduct())
     app.migrations.add(CreateRecipeCategoryRecipe())
     app.migrations.add(JobModelMigrate())
+    app.migrations.add(AddColorToProductSuggest())
 
     try app.autoMigrate().wait()
     

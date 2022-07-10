@@ -14,6 +14,7 @@ struct AdminController: RouteCollection {
 //        routes.post("upload", use: uploadData)
         routes.on(.POST, "upload", body: .collect(maxSize: .some(19999900000)), use: uploadData(req:))
         routes.get("api", "v1", "search", use: search)
+        routes.post("api", "v1", "suggest", use: create)
     }
     
     func uploadData(req: Request) throws -> EventLoopFuture<String> {
@@ -54,18 +55,25 @@ struct AdminController: RouteCollection {
             }
             
             return string
-
         }
     }
     
-    func search(req: Request) throws -> EventLoopFuture<[ProductSuggest]> {
+    func search(req: Request) async throws -> [ProductSuggest] {
         let query = try req.query.decode(SearchRq.self)
-        
-        return ProductSuggest.query(on: req.db).filter(\ProductSuggest.$title, .custom("ilike"), "%\(query.title)%").all().map {
-            return $0
+        return try await ProductSuggest.query(on: req.db)
+            .filter(\ProductSuggest.$title, .custom("ilike"), "%\(query.title)%")
+            .all()
+    }
+    
+    func create(req: Request) async throws -> [ProductSuggest] {
+        let dto = try req.content.decode(DTO.CreateSuggestRq.self)
+        let products = dto.products.split(separator: ",").map {
+            ProductSuggest(category: dto.category, price: 0, title: String($0), imagePath: "", color: dto.color)
         }
-//        return ProductSuggest.query(on: req.db).all()
         
+        try await products.create(on: req.db)
+        
+        return products
     }
     
     func delete(_ items: [ProductSuggest], req: Request) {
