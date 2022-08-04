@@ -26,6 +26,7 @@ struct DTO {
         let title: String?
         let count: String?
         let measureUnit: String?
+        let color: String?
     }
     
     struct ProductRs: Content {
@@ -33,6 +34,7 @@ struct DTO {
         let title: String
         let count: String?
         let isDone: Bool
+        let color: String?
     }
     
     struct AuthRq: Content {

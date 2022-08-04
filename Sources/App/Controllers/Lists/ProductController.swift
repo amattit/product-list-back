@@ -48,7 +48,8 @@ struct ProductController: RouteCollection {
                     id: try product.requireID(),
                     title: product.title,
                     count: product.count,
-                    isDone: product.isDone
+                    isDone: product.isDone,
+                    color: product.color
                 )
             }
     }
@@ -66,6 +67,7 @@ struct ProductController: RouteCollection {
         product.isDone = false
         product.$user.id = try user.requireID()
         product.$productList.id = listId
+        product.color = dto.color
         
         guard let list = try await ProductList
             .find(listId, on: req.db) else {
@@ -88,7 +90,7 @@ struct ProductController: RouteCollection {
             )
         )
         
-        return DTO.ProductRs(id: try product.requireID(), title: product.title, count: product.count, isDone: product.isDone)
+        return DTO.ProductRs(id: try product.requireID(), title: product.title, count: product.count, isDone: product.isDone, color: product.color)
     }
     
     func massCreate(req: Request) async throws -> [DTO.ProductRs] {
@@ -105,6 +107,7 @@ struct ProductController: RouteCollection {
             product.isDone = false
             product.$user.id = try user.requireID()
             product.$productList.id = listId
+            product.color = dto.color
             return product
         }
         
@@ -133,7 +136,7 @@ struct ProductController: RouteCollection {
         }
         
         return try products.map { product -> DTO.ProductRs in
-            DTO.ProductRs(id: try product.requireID(), title: product.title, count: product.count, isDone: product.isDone)
+            DTO.ProductRs(id: try product.requireID(), title: product.title, count: product.count, isDone: product.isDone, color: product.color)
         }
     }
     
@@ -157,7 +160,7 @@ struct ProductController: RouteCollection {
             }
             
             _ = product.save(on: req.db)
-            return DTO.ProductRs(id: try product.requireID(), title: product.title, count: product.count, isDone: product.isDone)
+            return DTO.ProductRs(id: try product.requireID(), title: product.title, count: product.count, isDone: product.isDone, color: product.color)
         }
     }
     
@@ -209,7 +212,7 @@ struct ProductController: RouteCollection {
             )
         )
         
-        return DTO.ProductRs(id: productId, title: product.title, count: product.count, isDone: product.isDone)
+        return DTO.ProductRs(id: productId, title: product.title, count: product.count, isDone: product.isDone, color: product.color)
     }
     
     func setUnDone(req: Request) throws -> EventLoopFuture<DTO.ProductRs> {
@@ -231,7 +234,7 @@ struct ProductController: RouteCollection {
                     }
                     product.isDone = false
                     _ = product.save(on: req.db)
-                    return req.eventLoop.future(DTO.ProductRs(id: productId, title: product.title, count: product.count, isDone: product.isDone))
+                    return req.eventLoop.future(DTO.ProductRs(id: productId, title: product.title, count: product.count, isDone: product.isDone, color: product.color))
                 }
                 .flatMap { $0 }
             }.flatMap { $0 }

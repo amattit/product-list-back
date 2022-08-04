@@ -26,3 +26,15 @@ struct CreateProduct: Migration {
         return database.schema("Product").delete()
     }
 }
+
+struct CreateProductColorMigration: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        return database.schema(Product.schema)
+            .field("color", .string)
+            .update()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        return database.schema("Product").delete()
+    }
+}

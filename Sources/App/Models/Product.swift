@@ -32,6 +32,9 @@ final class Product: BaseEntity, Model {
     @Field(key: "isDone")
     var isDone: Bool
     
+    @Field(key: "color")
+    var color: String?
+    
     @Parent(key: "userId")
     var user: User
     
